@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Survey — Coral Life Co., Ltd.</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --coral-main: #f48fb1;
+    --coral-soft: #fce4ec;
+    --pastel-blue: #e1f5fe;
+    --pastel-green: #e8f5e9;
+    --pastel-yellow: #fffde7;
+    --text-dark: #455a64;
+    --text-medium: #78909c;
+    --white: #ffffff;
+    --bg-light: #fafbfd;
+    --radius-lg: 30px;
+    --shadow-premium: 0 15px 45px rgba(244, 143, 177, 0.1);
+  }
+  
+  body { 
+    font-family: 'Sarabun', sans-serif; 
+    background: var(--bg-light); 
+    color: var(--text-dark); 
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  .top-nav { 
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(15px);
+    position: sticky; top: 0; z-index: 100; 
+    border-bottom: 1px solid rgba(244, 143, 177, 0.2);
+    padding: 10px 0;
+  }
+  .nav-inner { 
+    max-width: 1000px; margin: 0 auto; padding: 0 1.5rem; 
+    display: flex; align-items: center; justify-content: space-between; 
+  }
+  .brand-group { display: flex; align-items: center; }
+  .logo-img { height: 60px; width: auto; object-fit: contain; }
+
+  .tab-group { display: flex; gap: 4px; background: var(--pastel-blue); padding: 4px; border-radius: 14px; }
+  .tab-btn { 
+    padding: 8px 18px; font-size: 14px; border: none; border-radius: 10px;
+    background: none; color: var(--text-medium); cursor: pointer;
+    transition: all 0.3s; font-weight: 600; font-family: 'Sarabun';
+  }
+  .tab-btn.active { background: var(--white); color: var(--coral-main); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+  .panel { display: none; }
+  .panel.active { display: block; animation: fadeIn 0.6s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .content-wrap { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  .survey-card { 
+    background: var(--white); border-radius: var(--radius-lg); 
+    box-shadow: var(--shadow-premium); overflow: hidden; 
+    border: 1px solid rgba(244, 143, 177, 0.1);
+  }
+  .header-banner { 
+    background: linear-gradient(135deg, #fff 0%, var(--coral-soft) 100%); 
+    color: var(--text-dark); padding: 4rem 2rem; text-align: center;
+  }
+  .header-banner h1 { font-size: 32px; font-weight: 800; color: var(--coral-main); margin-bottom: 8px; }
+
+  .form-body { padding: 3rem 2rem; max-width: 750px; margin: 0 auto; }
+  .q-group { margin-bottom: 3.5rem; }
+  .q-title { display: block; font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #37474f; }
+  .q-title span { color: var(--coral-main); margin-right: 8px; font-weight: 700; }
+
+  .star-container { 
+    display: flex; flex-direction: column; align-items: center; 
+    background: linear-gradient(to bottom, #fff, #f9fbfc); 
+    padding: 2.5rem 1.5rem; border-radius: 20px;
+    border: 1px solid #edf2f7; transition: all 0.3s;
+  }
+  .star-row { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; justify-content: center; }
+  .star { 
+    font-size: 32px; cursor: pointer; filter: grayscale(1); opacity: 0.15; 
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+    user-select: none;
+  }
+  .star.on { filter: none; opacity: 1; transform: scale(1.1); }
+  .rating-label { font-size: 15px; font-weight: 600; color: var(--coral-main); height: 24px; }
+
+  .input-box { 
+    width: 100%; padding: 18px; border: 2px solid #edf2f7; border-radius: 15px; 
+    font-family: 'Sarabun'; font-size: 16px; transition: 0.3s;
+  }
+  .input-box:focus { outline: none; border-color: var(--coral-main); box-shadow: 0 0 0 4px var(--coral-soft); }
+
+  .btn-submit { 
+    width: 100%; padding: 20px; background: var(--coral-main); color: white; 
+    border: none; border-radius: 18px; font-size: 18px; font-weight: 700; 
+    cursor: pointer; transition: 0.3s; margin-top: 10px;
+    box-shadow: 0 8px 25px rgba(244, 143, 177, 0.3);
+  }
+  .btn-submit:hover { background: #ec407a; transform: translateY(-2px); }
+  .btn-submit:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; }
+
+  .grid-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px; }
+  .stat-card { background: var(--white); padding: 1.5rem; border-radius: 20px; box-shadow: var(--shadow-premium); text-align: center; border-bottom: 4px solid var(--pastel-blue); }
+  .stat-val { font-size: 32px; font-weight: 800; color: var(--coral-main); }
+  .stat-lab { font-size: 11px; color: var(--text-medium); font-weight: 700; text-transform: uppercase; margin-top: 5px; line-height: 1.3; }
+
+  .chart-box { background: var(--white); padding: 2rem; border-radius: 24px; box-shadow: var(--shadow-premium); margin-bottom: 35px; }
+
+  .log-card { background: var(--white); padding: 1.8rem; border-radius: 20px; margin-bottom: 1.2rem; box-shadow: var(--shadow-premium); display: flex; flex-direction: column; border: 1px solid #f1f2f6; }
+  .badge-container { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
+  .badge { background: var(--bg-light); padding: 6px 14px; border-radius: 12px; font-size: 11px; font-weight: 600; color: var(--text-medium); border: 1px solid #edf2f7; }
+  .badge b { color: var(--coral-main); }
+
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.7); backdrop-filter: blur(12px); z-index: 1000; align-items: center; justify-content: center; }
+  .overlay.active { display: flex; }
+  .login-box { background: white; padding: 3rem; border-radius: 35px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.1); }
+
+  @media (max-width: 600px) { 
+    .grid-metrics { grid-template-columns: 1fr 1fr; } 
+    .stat-card:first-child { grid-column: span 2; }
+    .logo-img { height: 60px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="nav-inner">
+    <div class="brand-group">
+      <img src="https://lh3.googleusercontent.com/d/19Mojy_vGBQz69HHqRNgXTXUFe9VHmMuZ" alt="Coral Life Logo" class="logo-img">
+    </div>
+    <div class="tab-group">
+      <button class="tab-btn active" id="btn-show-survey">แบบประเมิน</button>
+      <button class="tab-btn" id="btn-show-dash">Dashboard</button>
+    </div>
+  </div>
+</nav>
+
+<div id="panel-survey" class="panel active">
+  <div class="content-wrap">
+    <div class="survey-card" id="form-ui">
+      <div class="header-banner">
+        <h1>ERV Installation Feedback</h1>
+        <p>ความพึงพอใจของคุณคือความภูมิใจของเรา</p>
+      </div>
+      <div class="form-body">
+        <div class="q-group">
+          <label class="q-title">ชื่อลูกค้า / โครงการ</label>
+          <input type="text" id="input-cust" class="input-box" placeholder="ระบุชื่อเพื่อบันทึกข้อมูล">
+        </div>
+
+        <div id="q-container"></div>
+
+        <div class="q-group">
+          <label class="q-title">ข้อแนะนำเพิ่มเติม</label>
+          <textarea id="input-comment" class="input-box" style="min-height: 120px;" placeholder="คุณอยากให้เราพัฒนาด้านไหนเป็นพิเศษหรือไม่..."></textarea>
+        </div>
+
+        <button id="btn-submit-all" class="btn-submit">กำลังเตรียมระบบ...</button>
+      </div>
+    </div>
+
+    <div id="thanks-ui" style="display:none; text-align:center; padding:7rem 2rem;">
+      <div style="font-size: 80px; margin-bottom: 20px;">💖</div>
+      <h2 style="font-size: 32px; color: var(--coral-main);">บันทึกข้อมูลแล้ว</h2>
+      <p style="color: var(--text-medium); margin-bottom: 30px;">ขอบคุณที่ร่วมเป็นส่วนหนึ่งในการพัฒนาบริการของเรา</p>
+      <button onclick="location.reload()" class="btn-submit" style="max-width: 250px;">กลับหน้าแรก</button>
+    </div>
+  </div>
+</div>
+
+<div id="panel-dash" class="panel">
+  <div class="content-wrap">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; flex-wrap:wrap; gap:15px;">
+        <h2 style="font-size: 24px; color: var(--text-dark); font-weight: 700;">Performance Insights</h2>
+        <div style="display: flex; gap: 10px;">
+            <button id="btn-export" style="background: var(--coral-main); color: #fff; border:none; padding:10px 20px; border-radius:12px; font-weight:700; cursor:pointer;">Export CSV</button>
+            <button id="btn-clear" style="background: #ef5350; color: #fff; border:none; padding:10px 20px; border-radius:12px; font-weight:700; cursor:pointer;">ล้างข้อมูล</button>
+        </div>
+    </div>
+    
+    <div class="grid-metrics" id="metrics-container">
+      <div class="stat-card"><div class="stat-val" id="stat-count">0</div><div class="stat-lab">Total Responses</div></div>
+    </div>
+
+    <div class="chart-box"><canvas id="chart-main" style="max-height: 350px;"></canvas></div>
+    <div id="data-log"></div>
+  </div>
+</div>
+
+<!-- Modal สำหรับ Login Admin -->
+<div id="modal-auth" class="overlay">
+  <div class="login-box">
+    <div style="font-size: 50px; margin-bottom: 20px;">🔒</div>
+    <h3>Admin Access</h3>
+    <input type="password" id="pass-field" class="input-box" placeholder="Password" style="text-align:center; margin: 20px 0;">
+    <button id="btn-login" class="btn-submit" style="margin-top:0;">Login</button>
+    <button id="btn-close-auth" style="background:none; border:none; margin-top:15px; color:var(--text-medium); cursor:pointer;">ยกเลิก</button>
+  </div>
+</div>
+
+<!-- Modal สำหรับยืนยันการล้างข้อมูล -->
+<div id="modal-confirm-clear" class="overlay">
+  <div class="login-box">
+    <div style="font-size: 50px; margin-bottom: 20px;">⚠️</div>
+    <h3 style="color: #ef5350;">ยืนยันการล้างข้อมูล</h3>
+    <p style="margin: 15px 0; color: var(--text-medium); font-size: 15px;">คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลแบบประเมินทั้งหมด? การกระทำนี้ไม่สามารถกู้คืนได้</p>
+    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 25px;">
+        <button id="btn-cancel-clear" style="flex: 1; background:#edf2f7; color:var(--text-dark); border:none; padding:12px; border-radius:15px; font-weight:700; cursor:pointer;">ยกเลิก</button>
+        <button id="btn-confirm-clear" style="flex: 1; background:#ef5350; color:#fff; border:none; padding:12px; border-radius:15px; font-weight:700; cursor:pointer;">ลบข้อมูล</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal สำหรับยืนยันการลบ 1 รายการ -->
+<div id="modal-confirm-single" class="overlay">
+  <div class="login-box">
+    <div style="font-size: 50px; margin-bottom: 20px;">🗑️</div>
+    <h3 style="color: #ef5350;">ยืนยันการลบข้อมูล</h3>
+    <p style="margin: 15px 0; color: var(--text-medium); font-size: 15px;">คุณต้องการลบข้อมูลประเมินของลูกค้ารายนี้ใช่หรือไม่?</p>
+    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 25px;">
+        <button id="btn-cancel-single" style="flex: 1; background:#edf2f7; color:var(--text-dark); border:none; padding:12px; border-radius:15px; font-weight:700; cursor:pointer;">ยกเลิก</button>
+        <button id="btn-confirm-single" style="flex: 1; background:#ef5350; color:#fff; border:none; padding:12px; border-radius:15px; font-weight:700; cursor:pointer;">ลบข้อมูล</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal สำหรับแสดงข้อความแจ้งเตือน (แทน Alert) -->
+<div id="modal-alert" class="overlay">
+  <div class="login-box" style="padding: 2.5rem;">
+    <h3 id="alert-title" style="color: var(--text-dark); margin-bottom: 10px;">แจ้งเตือน</h3>
+    <p id="alert-message" style="color: var(--text-medium); margin-bottom: 25px;"></p>
+    <button id="btn-close-alert" class="btn-submit" style="padding: 12px; border-radius: 15px;">ตกลง</button>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+  let app;
+  try {
+      if (typeof __firebase_config !== 'undefined') {
+          app = initializeApp(JSON.parse(__firebase_config));
+      } else {
+          // โค้ด Firebase Config ใหม่ของคุณที่เชื่อมต่อกับ coral-after-sale-evaluation
+          app = initializeApp({
+            apiKey: "AIzaSyD9eGvDXXaHIi4LWjHzFwtAN3squkPjYyE",
+            authDomain: "coral-after-sale-evaluation.firebaseapp.com",
+            projectId: "coral-after-sale-evaluation",
+            storageBucket: "coral-after-sale-evaluation.firebasestorage.app",
+            messagingSenderId: "909566380668",
+            appId: "1:909566380668:web:3d0baf7e0b854323d3d7f9"
+          });
+      }
+  } catch (e) {
+      console.warn(e);
+  }
+
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+  
+  // ปรับให้ดึงข้อมูลอิงตาม Project ใหม่ของคุณ
+  const currentAppId = typeof __app_id !== 'undefined' ? __app_id : "coral-after-sale-evaluation";
+  const colRef = collection(db, "artifacts", currentAppId, "public", "data", "surveys");
+
+  let surveyScores = {};
+  let records = [];
+  let mainChart = null;
+  let unsubscribeStream = null;
+  let isAuthReady = false;
+  let documentIdToDelete = null;
+
+  const scoreText = ['', 'ต้องปรับปรุงด่วน', 'ไม่พึงพอใจ', 'ควรปรับปรุง', 'พอใช้ได้', 'ดีตามเกณฑ์', 'ค่อนข้างดี', 'พอใจ', 'ดีมาก', 'ดีเยี่ยม', 'ประทับใจ', 'ดีที่สุด'];
+  
+  const questions = [
+    { key: 'q1', label: 'คุณรู้สึกว่าอากาศในห้องสดชื่นขึ้นหรือไม่?', id: '01', short: 'ความสดชื่น' },
+    { key: 'q2', label: 'กลิ่นไม่พึงประสงค์ในห้องลดลงหรือไม่?', id: '02', short: 'ลดกลิ่นรบกวน' },
+    { key: 'q3', label: 'การไหลเวียนอากาศในห้องสม่ำเสมอและเหมาะสมหรือไม่?', id: '03', short: 'การไหลเวียนอากาศ' },
+    { key: 'q4', label: 'ระบบ ERV ช่วยรักษาอุณหภูมิในห้องให้คงที่และเหมาะสมหรือไม่?', id: '04', short: 'รักษาอุณหภูมิ' },
+    { key: 'q5', label: 'ระดับความชื้นในอากาศเหมาะสม ไม่รู้สึกเหนียวตัวหรือแห้งเกินไปหรือไม่?', id: '05', short: 'ระดับความชื้น' },
+    { key: 'q6', label: 'คุณรู้สึกปลอดโปร่ง ไม่ปวดศีรษะหรืออ่อนเพลียเมื่อตื่นนอนหรือไม่?', id: '06', short: 'ความปลอดโปร่ง' },
+    { key: 'q7', label: 'ระดับเสียงรบกวนจากการทำงานของระบบ ERV เหมาะสมหรือไม่?', id: '07', short: 'ระดับเสียงรบกวน' },
+    { key: 'q8', label: 'การควบคุมและปรับตั้งค่าระบบ ERV สะดวกและเข้าใจง่ายหรือไม่?', id: '08', short: 'การควบคุมระบบ' },
+    { key: 'q9', label: 'ความพึงพอใจโดยรวมต่อคุณภาพอากาศและสภาพแวดล้อมหลังติดตั้งระบบ ERV?', id: '09', short: 'ความพึงพอใจรวม' },
+    { key: 'q10', label: 'คุณยินดีแนะนำการติดตั้ง ERV นี้ให้ผู้อื่นไหม?', id: '10', short: 'แนะนำให้ผู้อื่น' }
+  ];
+
+  questions.forEach(q => surveyScores[q.key] = 0);
+
+  function showAlert(message, title = "แจ้งเตือน") {
+    document.getElementById('alert-title').innerText = title;
+    document.getElementById('alert-message').innerText = message;
+    document.getElementById('modal-alert').classList.add('active');
+  }
+  document.getElementById('btn-close-alert').onclick = () => document.getElementById('modal-alert').classList.remove('active');
+
+  function initSurveyUI() {
+    const qContainer = document.getElementById('q-container');
+    if (!qContainer) return;
+    qContainer.innerHTML = '';
+    questions.forEach(q => {
+      const html = `
+        <div class="q-group">
+          <label class="q-title"><span>${q.id}.</span> ${q.label}</label>
+          <div class="star-container">
+            <div class="star-row" data-key="${q.key}">
+              ${Array(10).fill(0).map((_, i) => `<span class="star">🌸</span>`).join('')}
+            </div>
+            <div class="rating-label" id="label-${q.key}">รอกดเลือกคะแนน</div>
+          </div>
+        </div>
+      `;
+      qContainer.insertAdjacentHTML('beforeend', html);
+    });
+
+    document.querySelectorAll('.star-row').forEach(row => {
+      const key = row.dataset.key;
+      const stars = row.querySelectorAll('.star');
+      const label = document.getElementById(`label-${key}`);
+      stars.forEach((s, idx) => {
+        const val = idx + 1;
+        s.addEventListener('mouseover', () => highlightStars(stars, val));
+        s.addEventListener('mouseleave', () => highlightStars(stars, surveyScores[key]));
+        s.addEventListener('click', () => {
+          surveyScores[key] = val;
+          label.textContent = `${val}/10 — ${scoreText[val] || 'เยี่ยมยอด'}`;
+          highlightStars(stars, val);
+        });
+      });
+    });
+    
+    const metricsContainer = document.getElementById('metrics-container');
+    questions.forEach(q => {
+      metricsContainer.insertAdjacentHTML('beforeend', `
+        <div class="stat-card">
+            <div class="stat-val" id="avg-${q.key}">0.0</div>
+            <div class="stat-lab">${q.short}</div>
+        </div>
+      `);
+    });
+  }
+
+  function highlightStars(stars, count) {
+    stars.forEach((s, i) => s.classList.toggle('on', i < count));
+  }
+
+  const performAuth = async () => {
+    try {
+      if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+        await signInWithCustomToken(auth, __initial_auth_token);
+      } else {
+        await signInAnonymously(auth);
+      }
+    } catch(err) {
+      console.warn("Auth initial fail:", err);
+    }
+  };
+
+  performAuth();
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      isAuthReady = true;
+      const btn = document.getElementById('btn-submit-all');
+      btn.innerText = "ส่งความคิดเห็น";
+      btn.disabled = false;
+    } else {
+      isAuthReady = false;
+    }
+  });
+
+  window.addEventListener('DOMContentLoaded', initSurveyUI);
+
+  document.getElementById('btn-submit-all').onclick = async () => {
+    if (!isAuthReady) return showAlert("ระบบยังไม่พร้อม กรุณารอสักครู่...");
+    
+    const name = document.getElementById('input-cust').value.trim();
+    const comment = document.getElementById('input-comment').value.trim();
+    
+    if (!name) return showAlert("กรุณาระบุชื่อลูกค้าหรือโครงการ");
+    if (Object.values(surveyScores).some(v => v === 0)) return showAlert("กรุณาให้คะแนนให้ครบทุกข้อ (10 ข้อ)");
+
+    const btn = document.getElementById('btn-submit-all');
+    btn.disabled = true;
+    btn.innerText = "กำลังบันทึก...";
+
+    try {
+      await addDoc(colRef, {
+        ...surveyScores,
+        customer: name,
+        comment: comment,
+        timestamp: serverTimestamp()
+      });
+      document.getElementById('form-ui').style.display = 'none';
+      document.getElementById('thanks-ui').style.display = 'block';
+    } catch (e) { 
+      btn.disabled = false;
+      btn.innerText = "ส่งความคิดเห็น";
+      showAlert("เกิดข้อผิดพลาด: " + e.message + "\nกรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต", "ข้อผิดพลาด");
+    }
+  };
+
+  function startDataStream() {
+    if (!isAuthReady) return;
+    const q = query(colRef, orderBy('timestamp', 'desc'));
+    unsubscribeStream = onSnapshot(q, (snap) => {
+      records = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      renderDash();
+    }, (err) => {
+      showAlert("ไม่สามารถดึงข้อมูลได้: " + err.message, "ข้อผิดพลาด");
+    });
+  }
+
+  function renderDash() {
+    const count = records.length;
+    document.getElementById('stat-count').textContent = count;
+    
+    const getAvg = (k) => count === 0 ? "0.0" : (records.reduce((a, b) => a + (Number(b[k]) || 0), 0) / count).toFixed(1);
+    
+    questions.forEach(q => {
+      const avgElement = document.getElementById(`avg-${q.key}`);
+      if(avgElement) avgElement.textContent = getAvg(q.key);
+    });
+
+    if (mainChart) mainChart.destroy();
+    
+    const bgColors = ['#f48fb1', '#ce93d8', '#90caf9', '#ffcc80', '#a5d6a7', '#ffab91', '#bcaaa4', '#80cbc4', '#9fa8da', '#ef9a9a'];
+    
+    mainChart = new Chart(document.getElementById('chart-main'), {
+      type: 'bar',
+      data: {
+        labels: questions.map(q => q.short),
+        datasets: [{ 
+          data: questions.map(q => getAvg(q.key)), 
+          backgroundColor: bgColors, 
+          borderRadius: 12 
+        }]
+      },
+      options: { 
+        indexAxis: 'y', 
+        plugins: { legend: { display: false } }, 
+        scales: { x: { min: 0, max: 10 } } 
+      }
+    });
+
+    document.getElementById('data-log').innerHTML = records.map(r => `
+      <div class="log-card" style="position: relative;">
+        <button class="btn-delete-single" data-id="${r.id}" style="position: absolute; top: 15px; right: 15px; background: #ffebee; color: #ef5350; border: none; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">ลบ</button>
+        <strong style="padding-right: 40px; display: block;">${r.customer || 'ไม่ระบุชื่อ'}</strong>
+        <div class="badge-container">
+          ${questions.map(q => `<span class="badge" title="${q.label}">${q.short}: <b>${r[q.key] || 0}</b></span>`).join('')}
+        </div>
+        ${r.comment ? `<p style="margin-top:10px; font-size:13px; color:#666; font-style:italic;">"${r.comment}"</p>` : ''}
+      </div>
+    `).join('');
+
+    document.querySelectorAll('.btn-delete-single').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        documentIdToDelete = e.target.getAttribute('data-id');
+        document.getElementById('modal-confirm-single').classList.add('active');
+      });
+    });
+  }
+
+  document.getElementById('btn-show-survey').onclick = () => switchTab('survey');
+  document.getElementById('btn-show-dash').onclick = () => document.getElementById('modal-auth').classList.add('active');
+  document.getElementById('btn-close-auth').onclick = () => document.getElementById('modal-auth').classList.remove('active');
+  
+  document.getElementById('btn-login').onclick = () => {
+    if (document.getElementById('pass-field').value === 'Coral789') {
+      document.getElementById('modal-auth').classList.remove('active');
+      document.getElementById('pass-field').value = ''; 
+      switchTab('dash');
+      startDataStream();
+    } else {
+      showAlert("รหัสผ่านไม่ถูกต้อง");
+    }
+  };
+
+  function switchTab(id) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === `panel-${id}`));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.id === `btn-show-${id}`));
+  }
+
+  document.getElementById('btn-export').onclick = () => {
+    if (records.length === 0) return showAlert("ไม่มีข้อมูลสำหรับการ Export");
+    
+    const headers = questions.map(q => q.short).join(',');
+    const csv = [`\uFEFFCustomer,${headers},Comment`];
+    
+    records.forEach(r => {
+      const rowData = questions.map(q => r[q.key] || 0).join(',');
+      csv.push(`"${r.customer}",${rowData},"${(r.comment||'').replace(/"/g, '""')}"`);
+    });
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(new Blob([csv.join('\n')], { type: 'text/csv;charset=utf-8;' }));
+    link.download = `ERV_IAQ_Survey_Export.csv`;
+    link.click();
+  };
+
+  document.getElementById('btn-clear').onclick = () => {
+    if (records.length === 0) return showAlert("ไม่มีข้อมูลให้ลบ");
+    document.getElementById('modal-confirm-clear').classList.add('active'); 
+  };
+
+  document.getElementById('btn-cancel-clear').onclick = () => {
+    document.getElementById('modal-confirm-clear').classList.remove('active'); 
+  };
+
+  document.getElementById('btn-confirm-clear').onclick = async () => {
+    document.getElementById('modal-confirm-clear').classList.remove('active');
+    
+    const btn = document.getElementById('btn-clear');
+    const originalText = btn.innerText;
+    btn.innerText = "กำลังลบ...";
+    btn.disabled = true;
+
+    try {
+      const deletePromises = records.map(r => 
+        deleteDoc(doc(db, "artifacts", currentAppId, "public", "data", "surveys", r.id))
+      );
+      
+      await Promise.all(deletePromises);
+      showAlert("ล้างข้อมูลในระบบเรียบร้อยแล้ว", "สำเร็จ");
+
+    } catch (error) {
+      console.error("Delete Error:", error);
+      showAlert("เกิดข้อผิดพลาดในการลบข้อมูล: " + error.message, "ข้อผิดพลาด");
+    } finally {
+      btn.innerText = originalText;
+      btn.disabled = false;
+    }
+  };
+
+  document.getElementById('btn-cancel-single').onclick = () => {
+    documentIdToDelete = null;
+    document.getElementById('modal-confirm-single').classList.remove('active');
+  };
+
+  document.getElementById('btn-confirm-single').onclick = async () => {
+    if (!documentIdToDelete) return;
+    document.getElementById('modal-confirm-single').classList.remove('active');
+    
+    try {
+      await deleteDoc(doc(db, "artifacts", currentAppId, "public", "data", "surveys", documentIdToDelete));
+      showAlert("ลบข้อมูลลูกค้ารายนี้เรียบร้อยแล้ว", "สำเร็จ");
+    } catch (error) {
+      console.error("Delete Error:", error);
+      showAlert("เกิดข้อผิดพลาดในการลบข้อมูล: " + error.message, "ข้อผิดพลาด");
+    } finally {
+      documentIdToDelete = null;
+    }
+  };
+</script>
+</body>
+</html>
