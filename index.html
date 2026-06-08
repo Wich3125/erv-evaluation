@@ -120,6 +120,19 @@
   .overlay.active { display: flex; }
   .login-box { background: white; padding: 3rem; border-radius: 35px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.1); }
 
+  .select-box {
+    padding: 10px 16px; border: 2px solid #edf2f7; border-radius: 12px;
+    font-family: 'Sarabun'; font-size: 14px; font-weight: 600; color: var(--text-dark);
+    outline: none; cursor: pointer; transition: 0.3s; background: var(--bg-light);
+    min-width: 200px;
+  }
+  .select-box:focus { border-color: var(--coral-main); }
+
+  .dropdown-item { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #f1f2f6; transition: 0.2s; font-size: 14px; text-align: left; }
+  .dropdown-item:last-child { border-bottom: none; }
+  .dropdown-item:hover { background: var(--pastel-blue); color: var(--coral-main); font-weight: 700; padding-left: 20px; }
+  .dropdown-item.active { background: var(--coral-soft); color: var(--coral-main); font-weight: 700; border-left: 4px solid var(--coral-main); }
+
   @media (max-width: 600px) { 
     .grid-metrics { grid-template-columns: 1fr 1fr; } 
     .stat-card:first-child { grid-column: span 2; }
@@ -178,12 +191,61 @@
   <div class="content-wrap">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; flex-wrap:wrap; gap:15px;">
         <h2 style="font-size: 24px; color: var(--text-dark); font-weight: 700;">Performance Insights</h2>
-        <div style="display: flex; gap: 10px;">
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            
+            <div style="position: relative; min-width: 260px;" id="dropdown-wrapper">
+                <input type="text" id="filter-project-input" class="select-box" placeholder="🔍 ดูทุกโครงการรวมกัน" style="width: 100%; padding-right: 35px;" autocomplete="off">
+                <span style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--text-medium); font-size: 12px;">▼</span>
+                <div id="project-dropdown-list" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 2px solid #edf2f7; border-radius: 12px; margin-top: 8px; max-height: 250px; overflow-y: auto; z-index: 1000; box-shadow: var(--shadow-premium);">
+                    <!-- Items will be injected here -->
+                </div>
+            </div>
+
             <button id="btn-export" style="background: var(--coral-main); color: #fff; border:none; padding:10px 20px; border-radius:12px; font-weight:700; cursor:pointer;">Export CSV</button>
             <button id="btn-clear" style="background: #ef5350; color: #fff; border:none; padding:10px 20px; border-radius:12px; font-weight:700; cursor:pointer;">ล้างข้อมูล</button>
         </div>
     </div>
     
+    <!-- ส่วนแสดงผล IEQ Score แบบ Gauge Chart -->
+    <div style="background: var(--white); padding: 2.5rem 2rem; border-radius: 24px; box-shadow: var(--shadow-premium); margin-bottom: 30px; text-align: center; border: 2px solid var(--coral-soft);">
+      <h3 style="color: var(--text-dark); font-size: 20px; margin-bottom: 5px;">ดัชนีคุณภาพสิ่งแวดล้อมภายในอาคาร (IEQ Score)</h3>
+      <p style="color: var(--text-medium); font-size: 14px; margin-bottom: 20px;">ประเมินจาก: ความสดชื่น, ลดกลิ่นรบกวน, การไหลเวียน, ความสะอาด, ความชื้น, ความปลอดโปร่ง และเสียง</p>
+      
+      <div style="position: relative; max-width: 300px; margin: 0 auto; height: 160px;">
+        <canvas id="chart-ieq"></canvas>
+        <div style="position: absolute; top: 65%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+          <div id="ieq-val-display" style="font-size: 42px; font-weight: 800; color: var(--coral-main); line-height: 1;">0.0</div>
+          <div style="font-size: 14px; color: var(--text-medium); font-weight: 600;">เต็ม 10</div>
+        </div>
+      </div>
+      <div id="ieq-text-display" style="font-size: 18px; font-weight: 700; color: var(--text-dark); margin-top: 5px;">-</div>
+    </div>
+
+    <!-- กราฟย่อย 3 ตัว (การควบคุมระบบ, ความพึงพอใจ, แนะนำให้ผู้อื่น) -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+        <div style="background: var(--white); padding: 1.5rem; border-radius: 20px; box-shadow: var(--shadow-premium); text-align: center; border-bottom: 4px solid #90caf9;">
+            <h4 style="color: var(--text-dark); margin-bottom: 10px; font-size: 16px;">การควบคุมระบบ</h4>
+            <div style="position: relative; height: 120px;">
+                <canvas id="chart-q8"></canvas>
+                <div style="position: absolute; top: 65%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; font-weight: 800; color: var(--text-dark);"><span id="q8-val">0.0</span></div>
+            </div>
+        </div>
+        <div style="background: var(--white); padding: 1.5rem; border-radius: 20px; box-shadow: var(--shadow-premium); text-align: center; border-bottom: 4px solid #ce93d8;">
+            <h4 style="color: var(--text-dark); margin-bottom: 10px; font-size: 16px;">ความพึงพอใจรวม</h4>
+            <div style="position: relative; height: 120px;">
+                <canvas id="chart-q9"></canvas>
+                <div style="position: absolute; top: 65%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; font-weight: 800; color: var(--text-dark);"><span id="q9-val">0.0</span></div>
+            </div>
+        </div>
+        <div style="background: var(--white); padding: 1.5rem; border-radius: 20px; box-shadow: var(--shadow-premium); text-align: center; border-bottom: 4px solid #ffcc80;">
+            <h4 style="color: var(--text-dark); margin-bottom: 10px; font-size: 16px;">แนะนำให้ผู้อื่น</h4>
+            <div style="position: relative; height: 120px;">
+                <canvas id="chart-q10"></canvas>
+                <div style="position: absolute; top: 65%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; font-weight: 800; color: var(--text-dark);"><span id="q10-val">0.0</span></div>
+            </div>
+        </div>
+    </div>
+
     <div class="grid-metrics" id="metrics-container">
       <div class="stat-card"><div class="stat-val" id="stat-count">0</div><div class="stat-lab">Total Responses</div></div>
     </div>
@@ -273,9 +335,14 @@
   let surveyScores = {};
   let records = [];
   let mainChart = null;
+  let ieqChart = null;
+  let chartQ8 = null;
+  let chartQ9 = null;
+  let chartQ10 = null;
   let unsubscribeStream = null;
   let isAuthReady = false;
   let documentIdToDelete = null;
+  let currentProjectFilter = 'all'; // ตัวแปรเก็บสถานะการกรองโครงการปัจจุบัน
 
   const scoreText = ['', 'ต้องปรับปรุงด่วน', 'ไม่พึงพอใจ', 'ควรปรับปรุง', 'พอใช้ได้', 'ดีตามเกณฑ์', 'ค่อนข้างดี', 'พอใจ', 'ดีมาก', 'ดีเยี่ยม', 'ประทับใจ', 'ดีที่สุด'];
   
@@ -283,7 +350,7 @@
     { key: 'q1', label: 'คุณรู้สึกว่าอากาศในห้องสดชื่นขึ้นหรือไม่?', id: '01', short: 'ความสดชื่น' },
     { key: 'q2', label: 'กลิ่นไม่พึงประสงค์ในห้องลดลงหรือไม่?', id: '02', short: 'ลดกลิ่นรบกวน' },
     { key: 'q3', label: 'การกระจายลมในห้องทั่วถึงและเหมาะสมหรือไม่?', id: '03', short: 'การไหลเวียนอากาศ' },
-    { key: 'q4', label: 'ขณะอยู่ในห้อง คุณรู้สึกว่าอากาศสะอาด ปราศจากฝุ่นหรือสิ่งแปลกปลอมในอากาศหรือไม่?', id: '04', short: 'รักษาอุณหภูมิ' },
+    { key: 'q4', label: 'คุณรู้สึกว่าอากาศสะอาด ปราศจากฝุ่นหรือสิ่งแปลกปลอมในอากาศหรือไม่?', id: '04', short: 'ความสะอาดของอากาศ' },
     { key: 'q5', label: 'ระดับความชื้นในอากาศเหมาะสม ไม่รู้สึกเหนียวตัวหรือแห้งเกินไปหรือไม่?', id: '05', short: 'ระดับความชื้น' },
     { key: 'q6', label: 'คุณรู้สึกปลอดโปร่ง ไม่ปวดศีรษะหรืออ่อนเพลียเมื่อตื่นนอนหรือไม่?', id: '06', short: 'ความปลอดโปร่ง' },
     { key: 'q7', label: 'ระดับเสียงรบกวนจากการทำงานของระบบ ERV เหมาะสมหรือไม่?', id: '07', short: 'ระดับเสียงรบกวน' },
@@ -418,12 +485,152 @@
     });
   }
 
+  function updateProjectDropdown() {
+    const uniqueProjects = [...new Set(records.map(r => r.customer || 'ไม่ระบุชื่อ'))].sort();
+    
+    if (currentProjectFilter !== 'all' && !uniqueProjects.includes(currentProjectFilter)) {
+        currentProjectFilter = 'all';
+        const input = document.getElementById('filter-project-input');
+        if(input) { input.value = ''; input.placeholder = "🔍 ดูทุกโครงการรวมกัน"; }
+    }
+    
+    const filterInput = document.getElementById('filter-project-input');
+    renderDropdownList(filterInput ? filterInput.value : '', uniqueProjects);
+  }
+
+  function renderDropdownList(searchTerm, uniqueProjects) {
+    const listContainer = document.getElementById('project-dropdown-list');
+    if(!listContainer) return;
+
+    const term = searchTerm.toLowerCase();
+    let html = `<div class="dropdown-item ${currentProjectFilter === 'all' ? 'active' : ''}" data-value="all">🌟 ดูทุกโครงการรวมกัน</div>`;
+
+    const filtered = uniqueProjects.filter(p => p.toLowerCase().includes(term));
+
+    filtered.forEach(proj => {
+        const safeProj = proj.replace(/"/g, '&quot;');
+        const isActive = currentProjectFilter === proj ? 'active' : '';
+        html += `<div class="dropdown-item ${isActive}" data-value="${safeProj}">${proj}</div>`;
+    });
+
+    if(filtered.length === 0) {
+        html += `<div style="padding: 12px 16px; color: var(--text-medium); font-size: 14px; text-align: center;">ไม่พบชื่อโครงการนี้</div>`;
+    }
+
+    listContainer.innerHTML = html;
+
+    listContainer.querySelectorAll('.dropdown-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            const val = e.target.getAttribute('data-value');
+            currentProjectFilter = val;
+
+            const input = document.getElementById('filter-project-input');
+            if(val === 'all') {
+                input.value = '';
+                input.placeholder = "🔍 ดูทุกโครงการรวมกัน";
+            } else {
+                input.value = val;
+            }
+
+            listContainer.style.display = 'none';
+            renderDash(); 
+        });
+    });
+  }
+
   function renderDash() {
-    const count = records.length;
+    updateProjectDropdown();
+
+    const targetRecords = currentProjectFilter === 'all' 
+        ? records 
+        : records.filter(r => (r.customer || 'ไม่ระบุชื่อ') === currentProjectFilter);
+
+    const count = targetRecords.length;
     document.getElementById('stat-count').textContent = count;
     
-    const getAvg = (k) => count === 0 ? "0.0" : (records.reduce((a, b) => a + (Number(b[k]) || 0), 0) / count).toFixed(1);
+    const getAvg = (k) => count === 0 ? "0.0" : (targetRecords.reduce((a, b) => a + (Number(b[k]) || 0), 0) / count).toFixed(1);
     
+    // --- คำนวณ IEQ Score (เฉลี่ยจาก 7 หัวข้อที่ระบุ) ---
+    const ieqKeys = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7'];
+    let avgIeq = 0.0;
+    if (count > 0) {
+      const sumOfAvgs = ieqKeys.reduce((sum, key) => sum + parseFloat(getAvg(key)), 0);
+      avgIeq = (sumOfAvgs / ieqKeys.length).toFixed(1);
+    }
+    
+    // แสดงผลตัวเลขและข้อความ
+    document.getElementById('ieq-val-display').textContent = avgIeq;
+    document.getElementById('ieq-text-display').textContent = count > 0 ? `ระดับความพึงพอใจ: ${scoreText[Math.round(avgIeq)] || 'ยอดเยี่ยม'}` : 'ยังไม่มีข้อมูลประเมิน';
+
+    if (ieqChart) ieqChart.destroy();
+    
+    // เปลี่ยนสี Gauge ตามเกณฑ์ IEQ
+    let ieqColor = '#f48fb1'; // ชมพู (ค่าเริ่มต้น)
+    if (avgIeq >= 8) ieqColor = '#4caf50'; // เขียว (ดีเยี่ยม)
+    else if (avgIeq >= 6) ieqColor = '#ffb300'; // เหลือง (ปานกลาง)
+    else if (avgIeq > 0) ieqColor = '#e53935'; // แดง (ต้องปรับปรุง)
+
+    ieqChart = new Chart(document.getElementById('chart-ieq'), {
+      type: 'doughnut',
+      data: {
+        labels: ['IEQ Score', 'คะแนนที่ขาด'],
+        datasets: [{
+          data: [avgIeq, 10 - avgIeq],
+          backgroundColor: [ieqColor, '#f1f2f6'],
+          borderWidth: 0,
+          borderRadius: [20, 0] // ให้ขอบมนสวยงาม
+        }]
+      },
+      options: {
+        rotation: -90,
+        circumference: 180, // ทำให้เป็นครึ่งวงกลม
+        cutout: '75%',
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false }
+        }
+      }
+    });
+    // ----------------------
+
+    // --- กราฟ 3 ตัวชี้วัดพิเศษ (Q8, Q9, Q10) ---
+    const valQ8 = parseFloat(getAvg('q8'));
+    const valQ9 = parseFloat(getAvg('q9'));
+    const valQ10 = parseFloat(getAvg('q10'));
+    
+    document.getElementById('q8-val').textContent = valQ8.toFixed(1);
+    document.getElementById('q9-val').textContent = valQ9.toFixed(1);
+    document.getElementById('q10-val').textContent = valQ10.toFixed(1);
+
+    const createSmallGauge = (chartInst, canvasId, val, color) => {
+        if (chartInst) chartInst.destroy();
+        return new Chart(document.getElementById(canvasId), {
+            type: 'doughnut',
+            data: {
+                labels: ['Score', 'ขาดอีก'],
+                datasets: [{
+                    data: [val, 10 - val],
+                    backgroundColor: [color, '#f1f2f6'],
+                    borderWidth: 0,
+                    borderRadius: [10, 0]
+                }]
+            },
+            options: {
+                rotation: -90,
+                circumference: 180,
+                cutout: '75%',
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { enabled: false } }
+            }
+        });
+    };
+
+    chartQ8 = createSmallGauge(chartQ8, 'chart-q8', valQ8, '#90caf9'); // สีฟ้า
+    chartQ9 = createSmallGauge(chartQ9, 'chart-q9', valQ9, '#ce93d8'); // สีม่วง
+    chartQ10 = createSmallGauge(chartQ10, 'chart-q10', valQ10, '#ffcc80'); // สีส้ม
+    // ----------------------
+
     questions.forEach(q => {
       const avgElement = document.getElementById(`avg-${q.key}`);
       if(avgElement) avgElement.textContent = getAvg(q.key);
@@ -450,7 +657,7 @@
       }
     });
 
-    document.getElementById('data-log').innerHTML = records.map(r => `
+    document.getElementById('data-log').innerHTML = targetRecords.map(r => `
       <div class="log-card" style="position: relative;">
         <button class="btn-delete-single" data-id="${r.id}" style="position: absolute; top: 15px; right: 15px; background: #ffebee; color: #ef5350; border: none; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">ลบ</button>
         <strong style="padding-right: 40px; display: block;">${r.customer || 'ไม่ระบุชื่อ'}</strong>
@@ -467,6 +674,35 @@
         document.getElementById('modal-confirm-single').classList.add('active');
       });
     });
+  }
+
+  const filterInput = document.getElementById('filter-project-input');
+  const dropdownList = document.getElementById('project-dropdown-list');
+
+  if(filterInput && dropdownList) {
+      filterInput.addEventListener('focus', () => {
+          dropdownList.style.display = 'block';
+          const uniqueProjects = [...new Set(records.map(r => r.customer || 'ไม่ระบุชื่อ'))].sort();
+          renderDropdownList(filterInput.value, uniqueProjects);
+      });
+
+      filterInput.addEventListener('input', (e) => {
+          dropdownList.style.display = 'block';
+          const uniqueProjects = [...new Set(records.map(r => r.customer || 'ไม่ระบุชื่อ'))].sort();
+          renderDropdownList(e.target.value, uniqueProjects);
+      });
+
+      document.addEventListener('click', (e) => {
+          const wrapper = document.getElementById('dropdown-wrapper');
+          if (wrapper && !wrapper.contains(e.target)) {
+              dropdownList.style.display = 'none';
+              if(currentProjectFilter === 'all') {
+                  filterInput.value = '';
+              } else {
+                  filterInput.value = currentProjectFilter;
+              }
+          }
+      });
   }
 
   document.getElementById('btn-show-survey').onclick = () => switchTab('survey');
@@ -490,22 +726,28 @@
   }
 
   document.getElementById('btn-export').onclick = () => {
-    if (records.length === 0) return showAlert("ไม่มีข้อมูลสำหรับการ Export");
+    const targetRecords = currentProjectFilter === 'all' 
+        ? records 
+        : records.filter(r => (r.customer || 'ไม่ระบุชื่อ') === currentProjectFilter);
+
+    if (targetRecords.length === 0) return showAlert("ไม่มีข้อมูลสำหรับการ Export");
     
     const headers = questions.map(q => q.short).join(',');
     const csv = [`\uFEFFCustomer,${headers},Comment`];
     
-    records.forEach(r => {
+    targetRecords.forEach(r => {
       const rowData = questions.map(q => r[q.key] || 0).join(',');
       csv.push(`"${r.customer}",${rowData},"${(r.comment||'').replace(/"/g, '""')}"`);
     });
     
+    const fileName = currentProjectFilter === 'all' ? 'ERV_IAQ_Survey_All.csv' : `ERV_IAQ_Survey_${currentProjectFilter}.csv`;
     const link = document.createElement('a');
     link.href = URL.createObjectURL(new Blob([csv.join('\n')], { type: 'text/csv;charset=utf-8;' }));
-    link.download = `ERV_IAQ_Survey_Export.csv`;
+    link.download = fileName;
     link.click();
   };
 
+  // --- ส่วนฟังก์ชันล้างข้อมูล (Clear Data) ---
   document.getElementById('btn-clear').onclick = () => {
     if (records.length === 0) return showAlert("ไม่มีข้อมูลให้ลบ");
     document.getElementById('modal-confirm-clear').classList.add('active'); 
