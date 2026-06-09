@@ -206,9 +206,9 @@
         </div>
     </div>
     
-    <!-- ส่วนแสดงผล IEQ Score แบบ Gauge Chart -->
+    <!-- ส่วนแสดงผล IAQ Score แบบ Gauge Chart -->
     <div style="background: var(--white); padding: 2.5rem 2rem; border-radius: 24px; box-shadow: var(--shadow-premium); margin-bottom: 30px; text-align: center; border: 2px solid var(--coral-soft);">
-      <h3 style="color: var(--text-dark); font-size: 20px; margin-bottom: 5px;">ดัชนีคุณภาพสิ่งแวดล้อมภายในอาคาร (IEQ Score)</h3>
+      <h3 style="color: var(--text-dark); font-size: 20px; margin-bottom: 5px;">ดัชนีคุณภาพอากาศภายในอาคาร (IAQ Score)</h3>
       <p style="color: var(--text-medium); font-size: 14px; margin-bottom: 20px;">ประเมินจาก: ความสดชื่น, ลดกลิ่นรบกวน, การไหลเวียน, ความสะอาด, ความชื้น, ความปลอดโปร่ง และเสียง</p>
       
       <div style="position: relative; max-width: 300px; margin: 0 auto; height: 160px;">
@@ -551,7 +551,7 @@
     
     const getAvg = (k) => count === 0 ? "0.0" : (targetRecords.reduce((a, b) => a + (Number(b[k]) || 0), 0) / count).toFixed(1);
     
-    // --- คำนวณ IEQ Score (เฉลี่ยจาก 7 หัวข้อที่ระบุ) ---
+    // --- คำนวณ IAQ Score (เฉลี่ยจาก 7 หัวข้อที่ระบุ) ---
     const ieqKeys = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7'];
     let avgIeq = 0.0;
     if (count > 0) {
@@ -575,7 +575,7 @@
     ieqChart = new Chart(document.getElementById('chart-ieq'), {
       type: 'doughnut',
       data: {
-        labels: ['IEQ Score', 'คะแนนที่ขาด'],
+        labels: ['IAQ Score', 'คะแนนที่ขาด'],
         datasets: [{
           data: [avgIeq, 10 - avgIeq],
           backgroundColor: [ieqColor, '#f1f2f6'],
